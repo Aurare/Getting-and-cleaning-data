@@ -44,3 +44,10 @@ if (! file.exists("data")) {
 ## Getting data from the internet
 
 download.file() #of course can be done by hand, but this helps for reproducibility
+
+fileURL <- "https://data.baltimorecity.gov/api/views/dz54-2aru/rows.csv?accessType=DOWNLOAD"
+
+download.file(fileURL,
+              destfile = "Data/cameras.csv", #be careful not to put / in front of directory to select
+              method = "libcurl",
+              mode = "wb") #for binary files
