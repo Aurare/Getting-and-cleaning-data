@@ -14,7 +14,7 @@
 ##                                                                                                       
 ##_______________________________________________________________________________________________________##
 
-##----------------------1.MySQL----------------------------------------------------------------------####
+##----------------------1. MySQL----------------------------------------------------------------------####
 #example with this data base http://genome.ucsc.edu/goldenPath/help/mysql.html
 library(RMySQL)
 
@@ -92,3 +92,98 @@ dbDisconnect(hg19)
 
 
 
+
+
+##----------------------2. HDF5 -------------------------------------------------------####
+
+#Install
+source("http://bioconductor.org/biocLite.R")
+biocLite("rhdf5")
+
+#Open 
+library(rhdf5)
+
+#Create hdf5 file
+created = h5createFile("example.h5")
+created
+
+#Create groups within the file
+created = h5createGroup("example.h5","foo")
+created = h5createGroup("example.h5","baa")
+created = h5createGroup("example.h5","foo/foobaa") #subgroup
+
+#list components of the file
+h5ls("example.h5")
+
+#create content inside of the groups
+A = matrix(1:10,nr=5,nc=2)
+h5write(A, "example.h5","foo/A") #matrix added in a group
+B = array(seq(0.1,2.0,by=0.1),dim=c(5,2,2))
+attr(B, "scale") <- "liter" #metadata added
+h5write(B, "example.h5","foo/foobaa/B")
+
+#list the elements 
+h5ls("example.h5")
+
+# > h5ls("example.h5")
+# group   name       otype  dclass       dim
+# 0           /    baa   H5I_GROUP                  
+# 1           /    foo   H5I_GROUP                  
+# 2        /foo      A H5I_DATASET INTEGER     5 x 2
+# 3        /foo foobaa   H5I_GROUP                  
+# 4 /foo/foobaa      B H5I_DATASET   FLOAT 5 x 2 x 2
+
+#write a dataframe (top structure)
+df = data.frame(1L:5L,seq(0,1,length.out=5),
+                c("ab","cde","fghi","a","s"), stringsAsFactors=FALSE)
+h5write(df, "example.h5","df")
+h5ls("example.h5")
+
+#read the data
+readA = h5read("example.h5","foo/A")
+readB = h5read("example.h5","foo/foobaa/B")
+readdf= h5read("example.h5","df")
+readA
+
+# > readA
+# [,1] [,2]
+# [1,]    1    6
+# [2,]    2    7
+# [3,]    3    8
+# [4,]    4    9
+# [5,]    5   10
+
+#writing and reading chunks
+h5write(c(12,13,14),"example.h5","foo/A",index=list(1:3,1))
+h5read("example.h5","foo/A")
+
+# > h5read("example.h5","foo/A")
+# [,1] [,2]
+# [1,]   12    6
+# [2,]   13    7
+# [3,]   14    8
+# [4,]    4    9
+# [5,]    5   10
+
+h5read("example.h5","foo/A",index=list(1:3,1))
+
+# > h5read("example.h5","foo/A",index=list(1:3,1))
+# [,1]
+# [1,]   12
+# [2,]   13
+# [3,]   14
+
+
+
+##----------------------3. Reading data from the Web ---------------------------------------------------####
+
+#Create connection with webpage and readlines
+con = url("http://scholar.google.com/citations?user=HI-I6C0AAAAJ&hl=en")
+
+#read lines (result as one long line)
+htmlCode = readLines(con)
+
+#Closing the connection (super important!)
+close(con)
+
+htmlCode
