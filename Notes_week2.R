@@ -7,8 +7,9 @@
 ##  
 ##  Script Name : Notes_week2
 ##  Description : My personal notes for the Coursera "getting and cleaning data " course by Johns Hopkins University
-##  Current Status : in process
+##  Current Status : complete
 ##  History versions : 11-05-2019 : first commit
+##                     21-05-2019 : last commit
 ##
 ##
 ##                                                                                                       
@@ -186,4 +187,73 @@ htmlCode = readLines(con)
 #Closing the connection (super important!)
 close(con)
 
-htmlCode
+print(htmlCode) #the content comes unstructured
+
+#Parse the data with XML library
+
+library(XML)
+library(RCurl) #resolve most problems when connection to the source fail (https)
+
+url <- "https://scholar.google.com/citations?user=HI-I6C0AAAAJ&amp;hl=en"
+curl_data <- getURL(url)
+html <- htmlTreeParse(curl_data, useInternalNodes=T)
+
+xpathSApply(html, "//title", xmlValue)
+
+xpathSApply(html, "//a[@class='gsc_a_ac gs_ibl']", xmlValue)
+
+#Parse with the HTTR package
+library(httr); html2 = GET(url) #here, Rcurl not needed
+
+content2 = content(html2,as="text")
+
+parsedHtml = htmlParse(content2,asText=TRUE)
+
+xpathSApply(parsedHtml, "//title", xmlValue)
+
+xpathSApply(parsedHtml, "//a[@class='gsc_a_ac gs_ibl']", xmlValue)
+
+
+#accessing website with passwords
+
+pg2 = GET("http://httpbin.org/basic-auth/user/passwd", #this is a website created to test the connection
+          authenticate("user","passwd"))
+
+pg2
+
+names(pg2)
+
+#Using handles
+
+
+##----------------------4. Reading from APIs -----------------------------------------------------------####
+
+## Access Twitter
+
+library(rjson)
+library(jsonlite)
+library(httr)
+
+myapp = oauth_app("twitter",
+                  key="xxx",
+                  secret="xxx")
+
+sig = sign_oauth1.0(myapp,
+                    token = "xxx",
+                    token_secret = "xxx")
+
+homeTL = GET("https://api.twitter.com/1.1/statuses/home_timeline.json", sig)
+
+
+json1 = content(homeTL)
+
+json2 = jsonlite::fromJSON(toJSON(json1))
+
+json1[[17]][3]
+
+
+
+##----------------------5. Reading from other sources --------------------------------------------------#####
+
+#How to find if a R package exists? "Data storage mechanism R package" on google
+#Almost every type of data has a package in R
